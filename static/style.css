@@ -1,0 +1,7 @@
+body { font-family: system-ui, sans-serif; margin: 1rem; background: #f7f7f7; }
+h1 { text-align: center; }
+form.form { display: flex; flex-direction: column; gap: .5rem; margin-bottom: 1rem; }
+input, select, textarea, button { padding: .5rem; font-size: 1rem; }
+table { width: 100%; border-collapse: collapse; background: white; }
+th, td { border: 1px solid #ccc; padding: .5rem; text-align: center; }
+footer { margin-top: 1rem; text-align: center; font-weight: bold; }
