@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LotoFoot Tracker</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+  <h1>🎯 LotoFoot Tracker</h1>
+
+  <form action="/add" method="post" class="form">
+    <input type="date" name="date" required value="{{ '%Y-%m-%d'|format(now()) }}">
+    <select name="type" required>
+      <option>LF7</option><option>LF8</option><option>LF12</option><option>LF15</option>
+    </select>
+    <input type="number" step="0.1" name="mise" placeholder="Mise (€)" required>
+    <select name="statut">
+      <option>en cours</option><option>gagné</option><option>perdu</option>
+    </select>
+    <textarea name="notes" placeholder="Notes"></textarea>
+    <button type="submit">Ajouter</button>
+  </form>
+
+  <h2>Historique</h2>
+  <table>
+    <tr><th>Date</th><th>Type</th><th>Mise</th><th>Gain</th><th>Statut</th><th>Modifier</th></tr>
+    {% for r in rows %}
+    <tr>
+      <td>{{r[1]}}</td>
+      <td>{{r[2]}}</td>
+      <td>{{r[3]}}</td>
+      <td>{{r[4]}}</td>
+      <td>{{r[5]}}</td>
+      <td>
+        <form action="/update/{{r[0]}}" method="post">
+          <select name="statut">
+            <option {% if r[5]=='en cours' %}selected{% endif %}>en cours</option>
+            <option {% if r[5]=='gagné' %}selected{% endif %}>gagné</option>
+            <option {% if r[5]=='perdu' %}selected{% endif %}>perdu</option>
+          </select>
+          <input type="number" step="0.1" name="gain" value="{{r[4]}}">
+          <button type="submit">✔</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+
+  <h2>Évolution cumulée</h2>
+  <div id="graph" style="height:400px;"></div>
+
+  <footer>
+    <p>Mises : {{total_mise}} € — Gains : {{total_gain}} € — Résultat : {{net}} €</p>
+  </footer>
+
+  <script>
+    const data = {{ rows | tojson }};
+    const dates = data.map(r => r[1]);
+    const mises = data.map(r => r[3]);
+    const gains = data.map(r => r[4]);
+
+    // cumuls
+    let cumMise = [], cumGain = [], cumNet = [], sM = 0, sG = 0;
+    for (let i = 0; i < mises.length; i++) {
+      sM += Number(mises[i]);
+      sG += Number(gains[i]);
+      cumMise.push(sM);
+      cumGain.push(sG);
+      cumNet.push(sG - sM);
+    }
+
+    const traces = [
+      {x: dates, y: cumMise, name: 'Mises cumulées', mode: 'lines', line:{color:'orange'}},
+      {x: dates, y: cumGain, name: 'Gains cumulés', mode: 'lines', line:{color:'green'}},
+      {x: dates, y: cumNet, name: 'Résultat net', mode: 'lines', line:{color:'blue'}}
+    ];
+
+    Plotly.newPlot('graph', traces, {
+      margin: {t: 30, l: 50, r: 30, b: 50},
+      paper_bgcolor:'#f7f7f7',
+      plot_bgcolor:'#f7f7f7',
+      legend:{orientation:'h'}
+    }, {displayModeBar:false});
+  </script>
+</body>
+</html>
